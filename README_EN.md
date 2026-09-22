@@ -102,17 +102,55 @@ User input ──→ Build prompt (with candidate labels)
             Map back to semantic options ──→ Return decision + distribution
 ```
 
-## Benchmark Results (Apple M4, Qwen2.5-0.5B-Instruct)
+## Benchmark Results (Apple M4, Qwen2.5-0.5B-Instruct, MLX fp16)
+
+Full output from `python verify_mlx.py`:
+
+### Label Token Verification
+
+| Label | Token ID | Status |
+|-------|----------|--------|
+| A (billing) | [32] | ✓ single token |
+| B (technical) | [33] | ✓ single token |
+| C (account) | [34] | ✓ single token |
+
+Matches the original (SGLang + CUDA) exactly.
+
+### Single-Case Scoring vs Generation
 
 | Metric | Scoring Path | Generation Path |
 |--------|-------------|----------------|
-| Avg latency | 37.7 ms | 112.1 ms |
-| Speed factor | — | 3.0x slower |
-| Token IDs | A=[32] B=[33] C=[34] | Matches original exactly |
-| Original logits | billing=25.28, technical=24.50, account=21.19 | — |
-| MLX logits | billing=24.25, technical=24.25, account=21.13 | — |
+| Decision | billing and payments | A |
+| Latency | 2.2 ms | 125.9 ms |
+| Speed | — | 57x slower (single token gen) |
 
-> Note: MLX fp16 precision causes billing/technical logits to be close, but the core mechanism is fully consistent. Scoring is 3x faster than generation.
+### Multi-Case Accuracy (6 tickets)
+
+| Ticket | Expected | Decision | Correct | Latency |
+|--------|----------|----------|---------|---------|
+| charged twice for subscription | billing | billing | ✓ | 38.6 ms |
+| app crashes on settings | technical | technical | ✓ | 37.2 ms |
+| forgot password | account | technical | ✗ | 37.7 ms |
+| refund not appeared | billing | billing | ✓ | 37.4 ms |
+| 500 error on upload | technical | technical | ✓ | 39.0 ms |
+| someone accessed my account | account | technical | ✗ | 37.2 ms |
+
+- **Scoring accuracy**: 4/6 (67%) (0.5B model capacity limit)
+- **Avg scoring latency**: 37.8 ms
+- **Avg generation latency**: 119.6 ms
+- **Speed factor**: scoring is **3.2x faster** than generation
+
+### Logits Comparison with Original
+
+| Option | Original logit (CUDA) | MLX logit | Original prob | MLX prob |
+|--------|----------------------|-----------|---------------|----------|
+| billing and payments | 25.2776 | 24.2500 | 0.6778 | 0.4893 |
+| technical support | 24.4982 | 24.2500 | 0.3109 | 0.4893 |
+| account access | 21.1888 | 21.1250 | 0.0114 | 0.0215 |
+
+- **Max probability difference**: 0.1885
+- **Cause**: MLX fp16 precision makes billing/technical logits identical (24.25), yielding 48.9% each after softmax. Under CUDA fp16, they differ by 0.78.
+- **Core mechanism fully consistent**: label token IDs, logits extraction, restricted softmax — all correct.
 
 ## Project Structure
 

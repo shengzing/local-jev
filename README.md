@@ -102,17 +102,55 @@ C = login, password, and account access problems
             映射回语义选项 ──→ 返回决策 + 概率分布
 ```
 
-## 实测结果（Apple M4, Qwen2.5-0.5B-Instruct）
+## 实测结果（Apple M4, Qwen2.5-0.5B-Instruct, MLX fp16）
+
+运行 `python verify_mlx.py` 的完整输出：
+
+### 标签 Token 验证
+
+| 标签 | Token ID | 状态 |
+|------|----------|------|
+| A (billing) | [32] | ✓ 单 token |
+| B (technical) | [33] | ✓ 单 token |
+| C (account) | [34] | ✓ 单 token |
+
+与原文（SGLang + CUDA）完全一致。
+
+### 单 Case 打分 vs 生成
 
 | 指标 | 打分路径 | 生成路径 |
 |------|---------|---------|
-| 平均延迟 | 37.7 ms | 112.1 ms |
-| 速度倍数 | — | 3.0x 慢 |
-| Token IDs | A=[32] B=[33] C=[34] | 与原文完全一致 |
-| 原文 logits | billing=25.28, technical=24.50, account=21.19 | — |
-| MLX logits | billing=24.25, technical=24.25, account=21.13 | — |
+| 决策 | billing and payments | A |
+| 延迟 | 2.2 ms | 125.9 ms |
+| 速度 | — | 57x 慢（单 token 生成） |
 
-> 注：MLX fp16 精度导致 billing/technical logits 接近，但核心机制完全一致。打分比生成快 3 倍。
+### 多 Case 准确率（6 条工单）
+
+| 工单 | 预期 | 决策 | 正确 | 延迟 |
+|------|------|------|------|------|
+| charged twice for subscription | billing | billing | ✓ | 38.6 ms |
+| app crashes on settings | technical | technical | ✓ | 37.2 ms |
+| forgot password | account | technical | ✗ | 37.7 ms |
+| refund not appeared | billing | billing | ✓ | 37.4 ms |
+| 500 error on upload | technical | technical | ✓ | 39.0 ms |
+| someone accessed my account | account | technical | ✗ | 37.2 ms |
+
+- **打分准确率**：4/6 (67%)（0.5B 模型能力限制）
+- **打分平均延迟**：37.8 ms
+- **生成平均延迟**：119.6 ms
+- **速度倍数**：打分比生成快 **3.2x**
+
+### 与原文 logits 对比
+
+| 选项 | 原 logit (CUDA) | MLX logit | 原概率 | MLX 概率 |
+|------|----------------|-----------|--------|---------|
+| billing and payments | 25.2776 | 24.2500 | 0.6778 | 0.4893 |
+| technical support | 24.4982 | 24.2500 | 0.3109 | 0.4893 |
+| account access | 21.1888 | 21.1250 | 0.0114 | 0.0215 |
+
+- **最大概率差异**：0.1885
+- **原因**：MLX fp16 精度导致 billing/technical logits 完全相同（24.25），softmax 后各 48.9%。CUDA fp16 下两者有 0.78 的差距。
+- **核心机制完全一致**：标签 token IDs、logits 读取、受限 softmax 路径全部正确。
 
 ## 项目结构
 
