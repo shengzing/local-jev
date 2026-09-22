@@ -1,0 +1,5 @@
+{"state": "Candidate has 5 years of Python experience, worked at a fintech startup, and has a CS degree from a top university.", "question": "Should this candidate proceed to the technical interview?", "expected": "yes"}
+{"state": "Candidate has 1 year of experience, no relevant degree, but shows strong open-source contributions.", "question": "Should this candidate proceed to the technical interview?", "expected": "yes"}
+{"state": "Candidate has 15 years of experience but all in a different field, no programming background.", "question": "Should this candidate proceed to the technical interview?", "expected": "no"}
+{"state": "Candidate's resume shows 3 years of relevant experience and a matching skill set.", "question": "Should this candidate proceed to the technical interview?", "expected": "yes"}
+{"state": "Candidate failed the initial screening call and showed poor communication.", "question": "Should this candidate proceed to the technical interview?", "expected": "no"}

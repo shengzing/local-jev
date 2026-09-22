@@ -1,0 +1,20 @@
+{"state": "I was charged twice for the same subscription.", "question": "Which category matches the ticket?", "expected": "billing and payments"}
+{"state": "The app crashes every time I open the settings page.", "question": "Which category matches the ticket?", "expected": "technical support"}
+{"state": "I forgot my password and can't log in.", "question": "Which category matches the ticket?", "expected": "account access"}
+{"state": "My refund hasn't appeared in my bank account yet.", "question": "Which category matches the ticket?", "expected": "billing and payments"}
+{"state": "The website shows a 500 error when I try to upload a file.", "question": "Which category matches the ticket?", "expected": "technical support"}
+{"state": "I need to change the email associated with my account.", "question": "Which category matches the ticket?", "expected": "account access"}
+{"state": "I was billed after I cancelled my subscription.", "question": "Which category matches the ticket?", "expected": "billing and payments"}
+{"state": "The mobile app won't load on my iPhone 15.", "question": "Which category matches the ticket?", "expected": "technical support"}
+{"state": "Someone else may have accessed my account without permission.", "question": "Which category matches the ticket?", "expected": "account access"}
+{"state": "I need an invoice for my company's accounting department.", "question": "Which category matches the ticket?", "expected": "billing and payments"}
+{"state": "The search feature returns no results even when I type valid queries.", "question": "Which category matches the ticket?", "expected": "technical support"}
+{"state": "I want to delete my account and all associated data.", "question": "Which category matches the ticket?", "expected": "account access"}
+{"state": "The payment went through but I didn't receive the premium features.", "question": "Which category matches the ticket?", "expected": "billing and payments"}
+{"state": "The dashboard is blank after the latest update.", "question": "Which category matches the ticket?", "expected": "technical support"}
+{"state": "Two-factor authentication isn't sending me the code.", "question": "Which category matches the ticket?", "expected": "account access"}
+{"state": "I need to update my credit card information for auto-renewal.", "question": "Which category matches the ticket?", "expected": "billing and payments"}
+{"state": "API returns 404 for endpoints that worked yesterday.", "question": "Which category matches the ticket?", "expected": "technical support"}
+{"state": "I think my account was mistakenly suspended.", "question": "Which category matches the ticket?", "expected": "account access"}
+{"state": "Can you explain the charge on my statement from last month?", "question": "Which category matches the ticket?", "expected": "billing and payments"}
+{"state": "The export to CSV feature is broken on the reports page.", "question": "Which category matches the ticket?", "expected": "technical support"}

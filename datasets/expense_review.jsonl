@@ -1,0 +1,5 @@
+{"state": "Employee submitted a $12 lunch receipt for a client meeting with itemized details.", "question": "Should this expense be approved?", "expected": "approve"}
+{"state": "Employee submitted a $500 hotel charge without a receipt or explanation.", "question": "Should this expense be approved?", "expected": "reject"}
+{"state": "Employee submitted a $45 taxi fare for airport transfer during a business trip.", "question": "Should this expense be approved?", "expected": "approve"}
+{"state": "Employee submitted a $3000 electronics purchase labeled as office supplies.", "question": "Should this expense be approved?", "expected": "reject"}
+{"state": "Employee submitted a $28 parking fee for a conference attended on behalf of the company.", "question": "Should this expense be approved?", "expected": "approve"}

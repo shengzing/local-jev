@@ -1,0 +1,130 @@
+# Local Jev — 用开源LLM本地复现Jev式决策引擎
+
+> 一个开源项目，复现 Jev 的核心推理模式：不生成文本，只读取第一个 token 的 logits，在已知候选选项间做 softmax 归一化，返回概率分布。
+>
+> 基于 SGLang `/v1/score` 接口实现，支持 Qwen、DeepSeek 等开源模型。
+
+## 这是什么
+
+[Jev](https://jev.ts.ai) 是一个商业决策模型，它的核心思路是：**很多 LLM 调用根本不需要生成文本，只需要在已知选项间做选择**。
+
+本项目在本地用开源工具链完整复现了这套推理路径：
+
+1. 用单字母标签（A/B/C）映射候选答案
+2. 让模型处理 prompt，只取第一个 token 位置的 logits
+3. 在候选 token 位置做受限 softmax
+4. 返回概率分布，不生成任何文本
+
+核心代码不到 100 行，依赖只有 SGLang + requests。
+
+## 快速开始
+
+```bash
+# 1. 安装 SGLang
+python3 -m venv .venv
+source .venv/bin/activate
+pip install "sglang[all]==0.5.10.post1" "requests==2.34.2"
+
+# 2. 启动模型服务（首次会自动下载模型）
+python -m sglang.launch_server --model-path Qwen/Qwen2.5-0.5B-Instruct --host 127.0.0.1 --port 30000
+
+# 3. 运行决策
+python src/decide.py
+```
+
+输出：
+
+```json
+{
+  "decision": "billing and payments",
+  "probabilities": {
+    "billing and payments": 0.6777,
+    "technical support": 0.3108,
+    "account access": 0.0113
+  }
+}
+```
+
+## 核心原理
+
+### 固定答案打分 ≠ 结构化输出
+
+| 特性 | 结构化输出 (JSON) | 固定答案打分 (Jev 式) |
+|------|-------------------|----------------------|
+| 输出形式 | `{"team": "billing"}` | `billing: 0.91, technical: 0.06, account: 0.03` |
+| 推理过程 | 逐 token 生成（花括号→字段名→值→闭合） | 只读第一个 token 的 logits，不生成 |
+| 返回信息 | 一个选择 | 完整概率分布 |
+| 延迟 | 高（自回归循环） | 低（单次前向传播） |
+
+结构化输出保证格式合法，但模型仍需逐 token 生成。打分模式直接读取 logits 并归一化，跳过整个解码循环。
+
+### 为什么用单字母标签
+
+`billing` 在不同 tokenizer 下可能是 1 个 token 也可能是多个；`technical support` 几乎必然跨多个 token 位置。
+
+单字母标签（A/B/C）保证每个候选只对应词表中的一个位置，且语义信息仍完整出现在 prompt 中：
+
+```
+A = billing questions and payment problems
+B = product errors and technical failures
+C = login, password, and account access problems
+```
+
+模型读 prompt 时看到完整描述，标签只是事后检查 logit 的那个 token。
+
+### 运行流程
+
+```
+用户输入 ──→ 构建 prompt（含候选标签）
+                    │
+            SGLang /tokenize 验证标签是单 token
+                    │
+            SGLang /v1/score 读取 logits + softmax
+                    │
+            映射回语义选项 ──→ 返回决策 + 概率分布
+```
+
+## 项目结构
+
+```
+local-jev/
+├── README.md                    ← 你在看这个
+├── LICENSE                      ← MIT
+├── src/
+│   ├── decide.py                ← 核心决策客户端
+│   ├── engine.py                ← 封装 scoring + generation 双路径
+│   └── utils.py                 ← prompt 构建、标签验证
+├── benchmark/
+│   ├── run_benchmark.py         ← 对比 scoring vs generation 的延迟和准确率
+│   └── results/                 ← 基准测试结果
+├── datasets/
+│   ├── support_routing.jsonl    ← 工单路由数据集
+│   ├── candidate_screening.jsonl ← 候选筛选数据集
+│   └── expense_review.jsonl     ← 费用审核数据集
+├── article/
+│   └── local-jev-deep-dive.md   ← 技术解读文章
+└── docs/
+    ├── architecture.md           ← 架构详解
+    └── calibration.md            ← 校准与评估
+```
+
+## 何时用打分，何时用生成
+
+| 场景 | 推荐方式 | 原因 |
+|------|---------|------|
+| 工单分类、意图识别 | 打分 | 候选有限，只需选择 |
+| 内容审核、风险分级 | 打分 | 枚举类别，概率分布有业务价值 |
+| 摘要、翻译、代码生成 | 生成 | 输出内容不可预知 |
+| 需要解释理由的判断 | 生成 | 需要自然语言输出 |
+
+**核心判据**：如果应用在推理前就知道所有可能答案，用打分；如果输出内容不可预知，用生成。
+
+## 致谢
+
+- 原文作者 [Avi Chawla](https://x.com/_avichawla) 的技术分享
+- [SGLang](https://github.com/sgl-project/sglang) 项目提供的 `/v1/score` 接口
+- 本项目独立实现，不隶属 Jev 或 TypeSafe
+
+## License
+
+MIT
