@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-jev"
+version = "1.0.0"
+description = "用开源 LLM 本地复现 Jev 式决策引擎 — 不生成文本，只读取 logits 做 softmax"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "贾承斌", email = "jiacb@wiseweb.com.cn"},
+]
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+mlx = ["mlx-lm"]
+transformers = ["transformers", "torch"]
+sglang = ["sglang[all]"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

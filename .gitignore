@@ -1,9 +1,11 @@
 __pycache__/
 *.pyc
 .venv/
+.sglang-venv/
 *.egg-info/
 dist/
 build/
-benchmark/results/
+benchmark/results/*
+!benchmark/results/.gitkeep
 *.log
 .DS_Store

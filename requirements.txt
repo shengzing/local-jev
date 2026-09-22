@@ -1,0 +1,7 @@
+requests>=2.31.0
+# SGLang (for server-based scoring):
+# pip install "sglang[all]==0.5.10.post1"
+# MLX (for Apple Silicon local verification):
+# pip install mlx-lm
+# transformers (for PyTorch verification):
+# pip install transformers torch

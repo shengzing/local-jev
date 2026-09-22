@@ -1,8 +1,10 @@
-# Local Jev — 用开源LLM本地复现Jev式决策引擎
+# Local Jev — 用开源 LLM 本地复现 Jev 式决策引擎
 
 > 一个开源项目，复现 Jev 的核心推理模式：不生成文本，只读取第一个 token 的 logits，在已知候选选项间做 softmax 归一化，返回概率分布。
->
-> 基于 SGLang `/v1/score` 接口实现，支持 Qwen、DeepSeek 等开源模型。
+
+**作者：贾承斌 (jiacb@wiseweb.com.cn)**
+
+[English](./README_EN.md) | 中文
 
 ## 这是什么
 
@@ -19,14 +21,18 @@
 
 ## 快速开始
 
+### 方式一：SGLang 服务（完整复现 /v1/score 端点）
+
 ```bash
 # 1. 安装 SGLang
 python3 -m venv .venv
 source .venv/bin/activate
-pip install "sglang[all]==0.5.10.post1" "requests==2.34.2"
+pip install "sglang[all]==0.5.10.post1" requests
 
 # 2. 启动模型服务（首次会自动下载模型）
-python -m sglang.launch_server --model-path Qwen/Qwen2.5-0.5B-Instruct --host 127.0.0.1 --port 30000
+python -m sglang.launch_server \
+    --model-path Qwen/Qwen2.5-0.5B-Instruct \
+    --host 127.0.0.1 --port 30000
 
 # 3. 运行决策
 python src/decide.py
@@ -45,6 +51,20 @@ python src/decide.py
 }
 ```
 
+### 方式二：MLX 原生（Apple Silicon，无需 SGLang）
+
+```bash
+pip install mlx-lm transformers
+python verify_mlx.py
+```
+
+### 方式三：PyTorch + transformers
+
+```bash
+pip install transformers torch
+python verify.py
+```
+
 ## 核心原理
 
 ### 固定答案打分 ≠ 结构化输出
@@ -52,11 +72,9 @@ python src/decide.py
 | 特性 | 结构化输出 (JSON) | 固定答案打分 (Jev 式) |
 |------|-------------------|----------------------|
 | 输出形式 | `{"team": "billing"}` | `billing: 0.91, technical: 0.06, account: 0.03` |
-| 推理过程 | 逐 token 生成（花括号→字段名→值→闭合） | 只读第一个 token 的 logits，不生成 |
+| 推理过程 | 逐 token 生成 | 只读第一个 token 的 logits |
 | 返回信息 | 一个选择 | 完整概率分布 |
 | 延迟 | 高（自回归循环） | 低（单次前向传播） |
-
-结构化输出保证格式合法，但模型仍需逐 token 生成。打分模式直接读取 logits 并归一化，跳过整个解码循环。
 
 ### 为什么用单字母标签
 
@@ -77,35 +95,54 @@ C = login, password, and account access problems
 ```
 用户输入 ──→ 构建 prompt（含候选标签）
                     │
-            SGLang /tokenize 验证标签是单 token
+            验证标签是单 token（/tokenize）
                     │
-            SGLang /v1/score 读取 logits + softmax
+            前向传播，读取 logits + softmax（/v1/score）
                     │
             映射回语义选项 ──→ 返回决策 + 概率分布
 ```
+
+## 实测结果（Apple M4, Qwen2.5-0.5B-Instruct）
+
+| 指标 | 打分路径 | 生成路径 |
+|------|---------|---------|
+| 平均延迟 | 37.7 ms | 112.1 ms |
+| 速度倍数 | — | 3.0x 慢 |
+| Token IDs | A=[32] B=[33] C=[34] | 与原文完全一致 |
+| 原文 logits | billing=25.28, technical=24.50, account=21.19 | — |
+| MLX logits | billing=24.25, technical=24.25, account=21.13 | — |
+
+> 注：MLX fp16 精度导致 billing/technical logits 接近，但核心机制完全一致。打分比生成快 3 倍。
 
 ## 项目结构
 
 ```
 local-jev/
-├── README.md                    ← 你在看这个
+├── README.md                    ← 中文文档
+├── README_EN.md                 ← English docs
 ├── LICENSE                      ← MIT
+├── pyproject.toml               ← 包元数据
+├── requirements.txt            ← 依赖声明
+├── .gitignore
 ├── src/
+│   ├── __init__.py
 │   ├── decide.py                ← 核心决策客户端
 │   ├── engine.py                ← 封装 scoring + generation 双路径
 │   └── utils.py                 ← prompt 构建、标签验证
 ├── benchmark/
-│   ├── run_benchmark.py         ← 对比 scoring vs generation 的延迟和准确率
+│   ├── run_benchmark.py         ← 对比 scoring vs generation 延迟/准确率
 │   └── results/                 ← 基准测试结果
 ├── datasets/
 │   ├── support_routing.jsonl    ← 工单路由数据集
-│   ├── candidate_screening.jsonl ← 候选筛选数据集
+│   ├── candidate_screening.jsonl← 候选筛选数据集
 │   └── expense_review.jsonl     ← 费用审核数据集
+├── verify.py                    ← PyTorch/MPS 验证
+├── verify_mlx.py                ← MLX 验证（Apple Silicon 原生）
 ├── article/
 │   └── local-jev-deep-dive.md   ← 技术解读文章
 └── docs/
-    ├── architecture.md           ← 架构详解
-    └── calibration.md            ← 校准与评估
+    ├── architecture.md          ← 架构详解
+    └── calibration.md           ← 校准与评估
 ```
 
 ## 何时用打分，何时用生成
@@ -127,4 +164,4 @@ local-jev/
 
 ## License
 
-MIT
+MIT — Copyright (c) 2026 贾承斌

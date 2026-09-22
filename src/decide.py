@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Local Jev — 核心决策客户端
 复现 Jev 式固定答案打分：不生成文本，只读第一个 token 的 logits 做 softmax。
@@ -32,7 +33,7 @@ OTHER_LABEL = "OTHER"  # 兜底选项：当已列选项都不对时
 
 # ── Prompt 构建 ────────────────────────────────────────────────────────
 
-def build_prompt(ticket: str, choices: dict[str, str]) -> str:
+def build_prompt(ticket: str, choices: dict) -> str:
     """构建决策 prompt，末尾以 'Label:' 结束，让模型下一个 token 应该是标签。"""
     choice_lines = "\n".join(
         f"{label} = {meaning}" for label, meaning in choices.items()
@@ -53,7 +54,7 @@ Label: """
 
 # ── 标签验证 ───────────────────────────────────────────────────────────
 
-def resolve_label_token_ids(choices: dict[str, str], base_url: str, model: str) -> list[int]:
+def resolve_label_token_ids(choices: dict, base_url: str, model: str) -> list:
     """
     用 SGLang /tokenize 验证每个标签是否恰好是单 token。
     拒绝非单 token 标签，因为打分需要一个词表位置。
@@ -85,10 +86,10 @@ def resolve_label_token_ids(choices: dict[str, str], base_url: str, model: str) 
 
 def score(
     prompt: str,
-    label_token_ids: list[int],
+    label_token_ids: list,
     base_url: str = BASE_URL,
     model: str = MODEL,
-) -> list[float]:
+) -> list:
     """
     调用 SGLang /v1/score，返回每个标签的概率（已 softmax）。
     不生成任何 token，只读取 logits 并归一化。
@@ -113,7 +114,7 @@ def score(
 
 def decide(
     ticket: str,
-    choices: Optional[dict[str, str]] = None,
+    choices: Optional[dict] = None,
     base_url: str = BASE_URL,
     model: str = MODEL,
 ) -> dict:
@@ -146,7 +147,7 @@ def decide(
 
     probabilities = {
         choices[label]: float(s)
-        for label, s in zip(choices, scores, strict=True)
+        for label, s in zip(choices, scores)
     }
     decision = max(probabilities, key=probabilities.get)
     top_prob = probabilities[decision]

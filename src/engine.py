@@ -112,7 +112,7 @@ Label: """
         scores = resp.json()["scores"][0]
         probabilities = {
             choices[label]: float(s)
-            for label, s in zip(choices, scores, strict=True)
+            for label, s in zip(choices, scores)
         }
         decision = max(probabilities, key=probabilities.get)
 
