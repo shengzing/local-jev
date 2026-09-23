@@ -162,11 +162,17 @@ local-jev/
 ├── pyproject.toml               ← Package metadata
 ├── requirements.txt             ← Dependencies
 ├── .gitignore
+├── .github/
+│   └── workflows/
+│       └── ci.yml               ← CI (syntax check + unit tests)
 ├── src/
 │   ├── __init__.py
 │   ├── decide.py                ← Core decision client
 │   ├── engine.py                ← Dual-path engine (scoring + generation)
+│   ├── scoring.py               ← Constrained softmax pure function
 │   └── utils.py                 ← Prompt building, label validation
+├── tests/
+│   └── test_scoring.py          ← Unit tests (no model server needed)
 ├── benchmark/
 │   ├── run_benchmark.py         ← Scoring vs generation comparison
 │   └── results/                 ← Benchmark results

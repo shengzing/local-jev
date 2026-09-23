@@ -5,8 +5,8 @@ Local Jev — 核心决策客户端
 复现 Jev 式固定答案打分：不生成文本，只读第一个 token 的 logits 做 softmax。
 
 用法:
-    python decide.py                          # 默认工单路由示例
-    python decide.py --ticket "退款没到账"      # 自定义工单
+    python src/decide.py                          # 默认工单路由示例
+    python src/decide.py --ticket "退款没到账"      # 自定义工单
 
 需要先启动 SGLang:
     python -m sglang.launch_server --model-path Qwen/Qwen2.5-0.5B-Instruct --host 127.0.0.1 --port 30000

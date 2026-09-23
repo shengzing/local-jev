@@ -162,11 +162,17 @@ local-jev/
 ├── pyproject.toml               ← 包元数据
 ├── requirements.txt            ← 依赖声明
 ├── .gitignore
+├── .github/
+│   └── workflows/
+│       └── ci.yml               ← CI（语法检查 + 单元测试）
 ├── src/
 │   ├── __init__.py
 │   ├── decide.py                ← 核心决策客户端
 │   ├── engine.py                ← 封装 scoring + generation 双路径
+│   ├── scoring.py               ← 受限 softmax 纯函数
 │   └── utils.py                 ← prompt 构建、标签验证
+├── tests/
+│   └── test_scoring.py          ← 单元测试（无需模型服务）
 ├── benchmark/
 │   ├── run_benchmark.py         ← 对比 scoring vs generation 延迟/准确率
 │   └── results/                 ← 基准测试结果
