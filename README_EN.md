@@ -2,7 +2,7 @@
 
 > An open-source project reproducing Jev's core inference pattern: instead of generating text, read the first token's logits and apply softmax over known candidate labels to return a probability distribution.
 
-**Author: Jiacheng Bin (jiacb@wiseweb.com.cn)**
+**Author: Jiacheng Bin (shengzing@163.com)**
 
 English | [中文](./README.md)
 

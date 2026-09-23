@@ -2,7 +2,7 @@
 
 > 一个开源项目，复现 Jev 的核心推理模式：不生成文本，只读取第一个 token 的 logits，在已知候选选项间做 softmax 归一化，返回概率分布。
 
-**作者：贾承斌 (jiacb@wiseweb.com.cn)**
+**作者：贾承斌 (shengzing@163.com)**
 
 [English](./README_EN.md) | 中文
 
