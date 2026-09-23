@@ -1,0 +1,20 @@
+target-version = "py39"
+line-length = 100
+extend-exclude = [".sglang-venv"]
+
+[lint]
+# 与项目现状匹配的规则集：默认规则 + 常用补充，不开激进风格类规则
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # import sorting
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "SIM", # simplify
+]
+
+[lint.per-file-ignores]
+# 顶层验证脚本是教学用途的线性脚本，print 驱动，允许非惯用结构
+"verify.py" = ["E501"]
+"verify_mlx.py" = ["E501"]

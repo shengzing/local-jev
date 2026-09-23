@@ -5,10 +5,11 @@ Local Jev — MLX 验证脚本
 这是 SGLang /v1/score 的等效实现：读取第一个 token 的 logits → 受限 softmax。
 """
 
-import json
+import math
 import time
+
 import mlx.core as mx
-from mlx_lm import load, generate
+from mlx_lm import generate, load
 from transformers import AutoTokenizer
 
 MODEL_PATH = "Qwen/Qwen2.5-0.5B-Instruct"  # HuggingFace repo ID, mlx-lm will resolve locally
@@ -61,7 +62,7 @@ print("\n[3/6] 加载 MLX 模型...")
 t0 = time.perf_counter()
 model, ml_tokenizer = load(MODEL_PATH)
 load_time = time.perf_counter() - t0
-print(f"  模型: Qwen/Qwen2.5-0.5B-Instruct (MLX)")
+print("  模型: Qwen/Qwen2.5-0.5B-Instruct (MLX)")
 print(f"  加载时间: {load_time:.1f}s")
 
 # ── 构建 prompt（用 chat template）──────────────────────
@@ -92,9 +93,8 @@ for tid in label_token_ids:
 print(f"  原始 logits (A,B,C): {selected_logits}")
 
 # 受限 softmax
-import math
 max_logit = max(selected_logits)
-exp_vals = [math.exp(l - max_logit) for l in selected_logits]
+exp_vals = [math.exp(x - max_logit) for x in selected_logits]
 sum_exp = sum(exp_vals)
 probs = [v / sum_exp for v in exp_vals]
 print(f"  softmax 后概率:    {probs}")
@@ -107,12 +107,12 @@ probabilities = {
 decision = max(probabilities, key=probabilities.get)
 top_prob = probabilities[decision]
 
-print(f"\n  ┌─────────────────────────────────────┐")
+print("\n  ┌─────────────────────────────────────┐")
 print(f"  │ 决策: {decision}")
 print(f"  │ 置信度: {top_prob:.4f}")
 print(f"  │ 延迟: {score_latency:.1f} ms")
-print(f"  └─────────────────────────────────────┘")
-print(f"\n  概率分布:")
+print("  └─────────────────────────────────────┘")
+print("\n  概率分布:")
 for choice, prob in sorted(probabilities.items(), key=lambda x: -x[1]):
     bar = "█" * int(prob * 30)
     print(f"    {choice:30s} {prob:.6f} {bar}")
@@ -166,33 +166,33 @@ Return only the label.
 Label: """
     msgs = [{"role": "user", "content": p}]
     rendered_p = ml_tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
-    
+
     # 打分
     t0 = time.perf_counter()
     input_ids = mx.array(ml_tokenizer.encode(rendered_p))
     logits = model(input_ids[None])
     last_logits = logits[0, -1, :]
-    
+
     sel_logits = [float(last_logits[tid]) for tid in label_token_ids]
     mx_val = max(sel_logits)
-    exp_v = [math.exp(l - mx_val) for l in sel_logits]
+    exp_v = [math.exp(x - mx_val) for x in sel_logits]
     s_exp = sum(exp_v)
     ps = [v / s_exp for v in exp_v]
     s_lat = (time.perf_counter() - t0) * 1000
     score_latencies.append(s_lat)
-    
+
     prob_map = dict(zip(choices.values(), ps))
     dec = max(prob_map, key=prob_map.get)
     ok = "✓" if dec == expected else "✗"
     if ok == "✓":
         correct += 1
-    
+
     # 生成
     t0 = time.perf_counter()
     _ = generate(model, ml_tokenizer, prompt=rendered_p, max_tokens=32, verbose=False)
     g_lat = (time.perf_counter() - t0) * 1000
     gen_latencies.append(g_lat)
-    
+
     ticket_short = ticket[:48] if len(ticket) > 48 else ticket
     print(f"  {ticket_short:<50} {expected:<22} {dec:<22} {ok:>3} {s_lat:>8.1f}")
 
@@ -209,9 +209,9 @@ print("=" * 60)
 original_probs = [0.67776233, 0.310878605, 0.011359035]
 original_logits = [25.277620, 24.498226, 21.188837]
 
-print(f"\n  原文环境: SGLang + CUDA (GPU)")
-print(f"  本机环境: MLX + Apple M4 (Metal)")
-print(f"  模型:     Qwen/Qwen2.5-0.5B-Instruct")
+print("\n  原文环境: SGLang + CUDA (GPU)")
+print("  本机环境: MLX + Apple M4 (Metal)")
+print("  模型:     Qwen/Qwen2.5-0.5B-Instruct")
 print(f"  标签 IDs: {label_token_ids} (与原文一致)")
 
 print(f"\n  {'选项':<25} {'原 logit':>10} {'MLX':>10} {'原概率':>10} {'MLX':>10}")

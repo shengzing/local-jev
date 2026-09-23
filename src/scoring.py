@@ -6,8 +6,6 @@ Local Jev — 受限 softmax 核心数学
 
 import math
 
-from src.utils import build_decision_prompt
-
 
 def constrained_softmax(logits: list[float]) -> list[float]:
     """
@@ -17,6 +15,6 @@ def constrained_softmax(logits: list[float]) -> list[float]:
     if not logits:
         return []
     max_logit = max(logits)
-    exp_vals = [math.exp(l - max_logit) for l in logits]
+    exp_vals = [math.exp(x - max_logit) for x in logits]
     sum_exp = sum(exp_vals)
     return [v / sum_exp for v in exp_vals]

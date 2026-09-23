@@ -7,10 +7,10 @@ Local Jev — 验证 v3
 - 同时验证 fp32 精度是否更接近原文
 """
 
-import json
 import time
+
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL_PATH = "Qwen/Qwen2.5-0.5B-Instruct"  # HuggingFace repo ID
 
@@ -148,24 +148,24 @@ Return only the label.
 Label: """
     msgs = [{"role": "user", "content": p}]
     rendered_p = tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
-    
+
     t0 = time.perf_counter()
     _, probs = score_with_model(model_fp16, rendered_p)
     s_lat = (time.perf_counter() - t0) * 1000
     score_latencies.append(s_lat)
-    
+
     prob_map = dict(zip(choices.values(), probs))
     decision = max(prob_map, key=prob_map.get)
     ok = "✓" if decision == expected else "✗"
     if ok == "✓":
         correct += 1
-    
+
     # Also generate for latency comparison
     t0 = time.perf_counter()
     _ = generate_with_model(model_fp16, rendered_p, max_new_tokens=32)
     g_lat = (time.perf_counter() - t0) * 1000
     gen_latencies.append(g_lat)
-    
+
     ticket_short = ticket[:48] if len(ticket) > 48 else ticket
     print(f"  {ticket_short:<50} {expected:<22} {decision:<22} {ok:>3} {s_lat:>8.1f}")
 
@@ -181,9 +181,9 @@ print("=" * 60)
 original_probs = [0.67776233, 0.310878605, 0.011359035]
 original_logits = [25.277620, 24.498226, 21.188837]
 
-print(f"\n  原文环境: SGLang + CUDA (GPU) + Qwen2.5-0.5B-Instruct")
-print(f"  本机环境: transformers + MPS (Apple M4) + Qwen2.5-0.5B-Instruct")
-print(f"  Prompt:   完全相同（含 chat template）")
+print("\n  原文环境: SGLang + CUDA (GPU) + Qwen2.5-0.5B-Instruct")
+print("  本机环境: transformers + MPS (Apple M4) + Qwen2.5-0.5B-Instruct")
+print("  Prompt:   完全相同（含 chat template）")
 print(f"  标签 IDs: {label_token_ids} (与原文一致)")
 
 print(f"\n  {'选项':<25} {'原 logit':>10} {'fp16':>10} {'fp32':>10} {'原概率':>10} {'fp16':>10} {'fp32':>10}")
@@ -198,8 +198,8 @@ fp32_max_diff = max(abs(original_probs[i] - fp32_probs[i]) for i in range(3))
 print(f"\n  fp16 最大概率差异: {fp16_max_diff:.6f}")
 print(f"  fp32 最大概率差异: {fp32_max_diff:.6f}")
 
-print(f"\n  延迟对比（同一个 case）:")
-print(f"    原文打分延迟: ~未明确（SGLang/CUDA）")
+print("\n  延迟对比（同一个 case）:")
+print("    原文打分延迟: ~未明确（SGLang/CUDA）")
 print(f"    本机 fp16 打分: {fp16_score_latency:.1f} ms")
 print(f"    本机 fp32 打分: {fp32_score_latency:.1f} ms")
 print(f"    本机生成延迟: {gen_latency:.1f} ms")

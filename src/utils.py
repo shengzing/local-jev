@@ -5,8 +5,8 @@ Prompt 构建、标签验证、结果格式化。
 """
 
 import json
+
 import requests
-from typing import Optional
 
 
 def build_decision_prompt(
@@ -78,7 +78,14 @@ def format_result(
     top_prob = probabilities[decision]
     status = "✓ AUTO" if top_prob >= threshold else "⚠ REVIEW"
 
-    lines = [f"\n{'='*50}", f"Decision: {decision}", f"Confidence: {top_prob:.4f}", f"Status: {status}", f"{'='*50}", "\nProbabilities:"]
+    lines = [
+        f"\n{'='*50}",
+        f"Decision: {decision}",
+        f"Confidence: {top_prob:.4f}",
+        f"Status: {status}",
+        f"{'='*50}",
+        "\nProbabilities:",
+    ]
     for choice, prob in sorted(probabilities.items(), key=lambda x: -x[1]):
         bar = "█" * int(prob * 30)
         lines.append(f"  {choice:30s} {prob:.4f} {bar}")
@@ -93,7 +100,7 @@ def format_result(
 def load_dataset(path: str) -> list[dict]:
     """加载 JSONL 数据集"""
     cases = []
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:

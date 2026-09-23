@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Local Jev — 纯函数单元测试
 不依赖模型服务，只测 prompt 构建、受限 softmax、结果格式化。
@@ -16,7 +15,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.scoring import constrained_softmax
 from src.utils import build_decision_prompt, load_dataset
-
 
 CHOICES = {
     "A": "billing and payments",
@@ -56,7 +54,7 @@ class TestBuildPrompt:
     def test_single_letter_labels_one_per_line(self):
         # Jev 式打分要求每个标签独立一行，格式 "X = 语义"
         prompt = build_decision_prompt("t", "q", CHOICES)
-        lines = [l for l in prompt.splitlines() if " = " in l]
+        lines = [ln for ln in prompt.splitlines() if " = " in ln]
         assert len(lines) == 4  # A/B/C + OTHER
 
 

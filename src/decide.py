@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Local Jev — 核心决策客户端
 复现 Jev 式固定答案打分：不生成文本，只读第一个 token 的 logits 做 softmax。
@@ -9,12 +8,12 @@ Local Jev — 核心决策客户端
     python src/decide.py --ticket "退款没到账"      # 自定义工单
 
 需要先启动 SGLang:
-    python -m sglang.launch_server --model-path Qwen/Qwen2.5-0.5B-Instruct --host 127.0.0.1 --port 30000
+    python -m sglang.launch_server \\
+        --model-path Qwen/Qwen2.5-0.5B-Instruct --host 127.0.0.1 --port 30000
 """
 
 import argparse
 import json
-import sys
 from typing import Optional
 
 import requests

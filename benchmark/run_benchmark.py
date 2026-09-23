@@ -19,7 +19,7 @@ from pathlib import Path
 
 # 添加项目根目录到 path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from src.engine import LocalJevEngine, DecisionResult, GenerationResult
+from src.engine import LocalJevEngine
 
 
 def run_benchmark(
@@ -38,7 +38,6 @@ def run_benchmark(
     def scoring_worker():
         starting_line.wait()
         for i, case in enumerate(dataset):
-            t0 = time.perf_counter()
             result = engine.decide(
                 state=case["state"],
                 question=case["question"],
@@ -113,7 +112,7 @@ def main():
         sys.exit(1)
 
     dataset = []
-    with open(dataset_path, "r", encoding="utf-8") as f:
+    with open(dataset_path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:

@@ -5,9 +5,8 @@ Local Jev — 双路径引擎
 用于对比延迟和准确率。
 """
 
-import json
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 import requests
@@ -133,10 +132,15 @@ Label: """
         常规生成路径：让模型生成文本，后解析选项。
         """
         choice_lines = "\n".join(f"{k} = {v}" for k, v in choices)
+        system_prompt = (
+            "You are a classifier. Choose exactly one label.\n\n"
+            f"Labels:\n{choice_lines}\n\n"
+            "Reply with only the label letter."
+        )
         messages = [
             {
                 "role": "system",
-                "content": f"You are a classifier. Choose exactly one label.\n\nLabels:\n{choice_lines}\n\nReply with only the label letter.",
+                "content": system_prompt,
             },
             {"role": "user", "content": f"Context: {state}\n\nQuestion: {question}"},
         ]
